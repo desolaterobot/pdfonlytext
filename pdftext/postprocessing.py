@@ -24,7 +24,6 @@ def postprocess_text(text: str) -> str:
         text = text.replace(old, new)
     text = replace_special_chars(text)
     text = replace_control_chars(text)
-    text = replace_ligatures(text)
     return text
 
 
@@ -65,12 +64,6 @@ def replace_special_chars(text: str) -> str:
 
 def replace_control_chars(text: str) -> str:
     return "".join(char for char in text if (unicodedata.category(char)[0] != "C" or char == HYPHEN_CHAR or char in WHITESPACE_CHARS))
-
-
-def replace_ligatures(text: str) -> str:
-    for ligature, replacement in LIGATURES.items():
-        text = text.replace(ligature, replacement)
-    return text
 
 
 def sort_blocks(blocks: List, tolerance=1.25) -> List:
