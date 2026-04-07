@@ -1,5 +1,5 @@
 import math
-
+import re
 import pypdfium2 as pdfium
 import pypdfium2.raw as pdfium_c
 
@@ -37,6 +37,20 @@ def get_chars(textpage: pdfium.PdfTextPage, page_bbox: list[float], page_rotatio
         fontname, fontflag = get_fontname(textpage, i)
         fontsize = pdfium_c.FPDFText_GetFontSize(textpage, i)
         fontweight = pdfium_c.FPDFText_GetFontWeight(textpage, i)
+
+        # Improved font size extraction (from pdftext issue #24)
+        # Logic copied from "https://github.com/datalab-to/pdftext/issues/24" since PyPDFium2 font size extraction is currently unreliable
+        if fontsize <= 1:
+            # Try to extract from font name (e.g., "Arial12" -> 12)
+            if fontname and (digit_sequences := re.findall(r"\d+", fontname)):
+                fontsize = float(digit_sequences[-1])
+            # Fall back to bbox dimensions based on rotation
+            elif text != "\n":  # Skip newline characters
+                if round(rotation) in (0.0, 180.0, -180.0):
+                    fontsize = bbox_coords[3] - bbox_coords[1]  # height
+                elif round(rotation) in (90.0, -90.0, 270.0, -270.0):
+                    fontsize = bbox_coords[2] - bbox_coords[0]  # width
+        fontsize = int(fontsize)
 
         char_dict: Char = {
             "bbox": bbox,

@@ -125,7 +125,11 @@ def get_spans(chars: Chars, superscript_height_threshold: float = 0.8, line_dist
         span['char_end_idx'] = char['char_idx']
         span['bbox'] = span['bbox'].merge(char['bbox'])
         span['chars'].append(char)
-
+    
+    # Remove the span if it's only whitespace
+    if spans and not spans[-1]['text'].strip():
+        spans.pop()
+    
     return spans
 
 
@@ -184,7 +188,7 @@ def get_blocks(lines: Lines) -> Blocks:
     if y_diffs:
         median_y_gap = statistics.median(y_diffs) or median_y_gap
 
-    tolerance_factor = 1.5
+    tolerance_factor = 1.25
     allowed_x_gap = median_x_gap * tolerance_factor
     allowed_y_gap = median_y_gap * tolerance_factor
 
@@ -206,10 +210,10 @@ def get_blocks(lines: Lines) -> Blocks:
         current_center = line["bbox"].center
 
         x_diff = abs(current_center[0] - last_center[0])
-        y_diff = abs(current_center[1] - last_center[1])
+        y_diff = int(abs(current_center[1] - last_center[1]))
 
         # we merge if the line is close enough to the previous line
-        if x_diff <= allowed_x_gap and y_diff <= allowed_y_gap:
+        if y_diff <= allowed_y_gap:
             block_merge()
             continue
 
